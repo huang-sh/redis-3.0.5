@@ -48,43 +48,60 @@
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
  * \0 characters in the middle, as the length is stored in the sds header. */
+// 创建一个新的sds,init来源,initlen长度
 sds sdsnewlen(const void *init, size_t initlen) {
     struct sdshdr *sh;
 
     if (init) {
-        sh = zmalloc(sizeof(struct sdshdr)+initlen+1);
+        // zmalloc 是对C的malloc的封装,
+        // 这个是sdshdr的数据空间
+        sh = zmalloc(sizeof(struct sdshdr)+initlen+1);  // 1是为了补\0
     } else {
         sh = zcalloc(sizeof(struct sdshdr)+initlen+1);
     }
     if (sh == NULL) return NULL;
-    sh->len = initlen;
-    sh->free = 0;
-    if (initlen && init)
-        memcpy(sh->buf, init, initlen);
-    sh->buf[initlen] = '\0';
+    sh->len = initlen;  // 使用的长度
+    sh->free = 0;       // 剩余的长度
+    if (initlen && init)    // 在长度以及init不为空的情况下
+        memcpy(sh->buf, init, initlen); // 内存拷贝
+    sh->buf[initlen] = '\0';    // 末尾补结尾符
     return (char*)sh->buf;
 }
 
 /* Create an empty (zero length) sds string. Even in this case the string
  * always has an implicit null term. */
 sds sdsempty(void) {
+    // 创建一个空的sds
     return sdsnewlen("",0);
 }
 
 /* Create a new sds string starting from a null terminated C string. */
 sds sdsnew(const char *init) {
+    // 申请一个sds空间,只需要init
     size_t initlen = (init == NULL) ? 0 : strlen(init);
     return sdsnewlen(init, initlen);
 }
 
 /* Duplicate an sds string. */
 sds sdsdup(const sds s) {
+    // copy new sds
     return sdsnewlen(s, sdslen(s));
 }
 
 /* Free an sds string. No operation is performed if 's' is NULL. */
 void sdsfree(sds s) {
+    // 回收空间
     if (s == NULL) return;
+    /*
+     * struct sdshdr {
+     *  unsigned int len;
+     *  unsigned int free;
+     *  char buf[];
+     * }
+     * s是指向buf;
+     * sizeof(struct sdshdr)是获取到这个结构体的大小
+     * s - sizeof(struct sdshdr)是得到指向这个结构体的指针
+     */
     zfree(s-sizeof(struct sdshdr));
 }
 
@@ -101,11 +118,14 @@ void sdsfree(sds s) {
  *
  * The output will be "2", but if we comment out the call to sdsupdatelen()
  * the output will be "6" as the string was modified but the logical length
- * remains 6 bytes. */
+ * remains 6 bytes. 
+ * 这个是为了防止sds被非法修改,导致可能存在的内存泄漏,针对free以及len的属性字段
+ * */
 void sdsupdatelen(sds s) {
+    // 还是有些不理解
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
-    int reallen = strlen(s);
-    sh->free += (sh->len-reallen);
+    int reallen = strlen(s); //
+    sh->free += (sh->len-reallen);  // 
     sh->len = reallen;
 }
 

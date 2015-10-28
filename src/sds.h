@@ -39,24 +39,33 @@
 typedef char *sds;
 
 struct sdshdr {
-    unsigned int len;
-    unsigned int free;
-    char buf[];
+    unsigned int len;   // 使用的长度
+    unsigned int free;  // 开辟的空间
+    char buf[];         // 存储
 };
 
+/**
+ * 获取sds所使用的空间大小
+ */
 static inline size_t sdslen(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->len;
 }
 
+/**
+ * 获取sds剩余的空间大小
+ */
 static inline size_t sdsavail(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->free;
 }
-
+// 申请一个sds空间,根据init以及initlen
 sds sdsnewlen(const void *init, size_t initlen);
+// 申请一个sds空间,根据init
 sds sdsnew(const char *init);
+// 申请一个空的sds
 sds sdsempty(void);
+// 获取sds的使用空间
 size_t sdslen(const sds s);
 sds sdsdup(const sds s);
 void sdsfree(sds s);
