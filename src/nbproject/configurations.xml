@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="95">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <in>adlist.c</in>
+      <in>ae.c</in>
+      <in>ae_epoll.c</in>
+      <in>ae_evport.c</in>
+      <in>ae_kqueue.c</in>
+      <in>ae_select.c</in>
+      <in>anet.c</in>
+      <in>aof.c</in>
+      <in>bio.c</in>
+      <in>bitops.c</in>
+      <in>blocked.c</in>
+      <in>cluster.c</in>
+      <in>config.c</in>
+      <in>crc16.c</in>
+      <in>crc64.c</in>
+      <in>db.c</in>
+      <in>debug.c</in>
+      <in>dict.c</in>
+      <in>endianconv.c</in>
+      <in>hyperloglog.c</in>
+      <in>intset.c</in>
+      <in>latency.c</in>
+      <in>lzf_c.c</in>
+      <in>lzf_d.c</in>
+      <in>memtest.c</in>
+      <in>multi.c</in>
+      <in>networking.c</in>
+      <in>notify.c</in>
+      <in>object.c</in>
+      <in>pqsort.c</in>
+      <in>pubsub.c</in>
+      <in>rand.c</in>
+      <in>rdb.c</in>
+      <in>redis-benchmark.c</in>
+      <in>redis-check-aof.c</in>
+      <in>redis-check-dump.c</in>
+      <in>redis-cli.c</in>
+      <in>redis.c</in>
+      <in>release.c</in>
+      <in>replication.c</in>
+      <in>rio.c</in>
+      <in>scripting.c</in>
+      <in>sds.c</in>
+      <in>sentinel.c</in>
+      <in>setproctitle.c</in>
+      <in>sha1.c</in>
+      <in>slowlog.c</in>
+      <in>sort.c</in>
+      <in>sparkline.c</in>
+      <in>syncio.c</in>
+      <in>t_hash.c</in>
+      <in>t_list.c</in>
+      <in>t_set.c</in>
+      <in>t_string.c</in>
+      <in>t_zset.c</in>
+      <in>util.c</in>
+      <in>ziplist.c</in>
+      <in>zipmap.c</in>
+      <in>zmalloc.c</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="重要文件"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem></pElem>
+            </incDir>
+          </cTool>
+        </makeTool>
+      </makefileType>
+      <item path="adlist.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ae.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ae_epoll.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ae_evport.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ae_kqueue.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ae_select.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="anet.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="aof.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="bio.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="bitops.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="blocked.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="cluster.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="config.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="crc16.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="crc64.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="db.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="debug.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="dict.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="endianconv.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="hyperloglog.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="intset.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="latency.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="lzf_c.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="lzf_d.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="memtest.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="multi.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="networking.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="notify.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="object.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="pqsort.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="pubsub.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="rand.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="rdb.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="redis-benchmark.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="redis-check-aof.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="redis-check-dump.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="redis-cli.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="redis.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="release.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="replication.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="rio.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="scripting.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="sds.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="sentinel.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="setproctitle.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="sha1.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="slowlog.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="sort.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="sparkline.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="syncio.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="t_hash.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="t_list.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="t_set.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="t_string.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="t_zset.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="util.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="ziplist.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="zipmap.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="zmalloc.c" ex="false" tool="0" flavor2="2">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
