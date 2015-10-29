@@ -119,7 +119,6 @@ void sdsfree(sds s) {
  * The output will be "2", but if we comment out the call to sdsupdatelen()
  * the output will be "6" as the string was modified but the logical length
  * remains 6 bytes. 
- * 这个是为了防止sds被非法修改,导致可能存在的内存泄漏,针对free以及len的属性字段
  * */
 void sdsupdatelen(sds s) {
     // 还是有些不理解
@@ -134,6 +133,8 @@ void sdsupdatelen(sds s) {
  * so that next append operations will not require allocations up to the
  * number of bytes previously available. */
 void sdsclear(sds s) {
+    // 设定属性free以及len的长度
+    // 清空sds字符串,但不回收空间
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     sh->free += sh->len;
     sh->len = 0;
@@ -147,18 +148,36 @@ void sdsclear(sds s) {
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
 sds sdsMakeRoomFor(sds s, size_t addlen) {
+    /*
+     * 扩大sds的存储空间,只有保证free 小于 addlen
+     * 注意点:当该函数返回不为NULL时才能覆盖原有的sds串.否则存在内存泄漏
+     * 例如:
+     * sds old = sdsnew("12345");
+     * OK:
+     * sds new = sdsMakeRoomFor(old, SDS_MAX_PREALLOC);
+     * if (new) old = new;
+     * ERROR:
+     * old = sdsMakeRoomFor(old, SDS_MAX_PREALLOC);
+     * if (NULL == old) { is ERROR }
+     */
     struct sdshdr *sh, *newsh;
     size_t free = sdsavail(s);
     size_t len, newlen;
 
+    // 自由空间大于增量大小,返回
     if (free >= addlen) return s;
-    len = sdslen(s);
+    len = sdslen(s);    // 使用的空间大小
     sh = (void*) (s-(sizeof(struct sdshdr)));
     newlen = (len+addlen);
+    // 新的空间小于最大空间大小,则乘2
     if (newlen < SDS_MAX_PREALLOC)
         newlen *= 2;
     else
         newlen += SDS_MAX_PREALLOC;
+    // zrealloc是对realloc的封装,因注意:
+    // realloc(p, size_t);开辟空间失败,返回null,但是p的空间不会被回收,
+    // 禁止使用p = realloc(p, size_t);导致内存泄漏.
+    // void newp = realooc(p, size_t); if (newp) p = newp;
     newsh = zrealloc(sh, sizeof(struct sdshdr)+newlen+1);
     if (newsh == NULL) return NULL;
 
@@ -173,9 +192,14 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
 sds sdsRemoveFreeSpace(sds s) {
+    /*
+     * 缩小sds中buf的空间,仅仅缩小到len
+     * 是free为0
+     */
     struct sdshdr *sh;
 
     sh = (void*) (s-(sizeof(struct sdshdr)));
+    // 缩小或者不改变空间
     sh = zrealloc(sh, sizeof(struct sdshdr)+sh->len+1);
     sh->free = 0;
     return sh->buf;
@@ -189,8 +213,16 @@ sds sdsRemoveFreeSpace(sds s) {
  * 4) The implicit null term.
  */
 size_t sdsAllocSize(sds s) {
+    /*
+     * 返回sds所在的struct sdshdr的空间大小,包括buf
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
 
+    /*
+     * sizeof(*sh) 计算struct sdshdr的空间大小,但不包含buf
+     * sh->len是使用的空间,sh->free是剩余的空间
+     * +1是开辟空间是所默认的\0
+     */
     return sizeof(*sh)+sh->len+sh->free+1;
 }
 
@@ -218,8 +250,14 @@ size_t sdsAllocSize(sds s) {
  * sdsIncrLen(s, nread);
  */
 void sdsIncrLen(sds s, int incr) {
+    /*
+     * 这个是在原来sds的基础上修改free以及len的属性
+     * 当incr > 0,是要增加使用空间, 必须保证 sh->free >= incr;自由空间大于增量大小
+     * 否则,是要缩小使用空间,必须保证 sh->len >= incr;使用空间大于缩量大小
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
 
+    // assert 不成立: 退出
     if (incr >= 0)
         assert(sh->free >= (unsigned int)incr);
     else
@@ -235,15 +273,23 @@ void sdsIncrLen(sds s, int incr) {
  * if the specified length is smaller than the current length, no operation
  * is performed. */
 sds sdsgrowzero(sds s, size_t len) {
+    /*
+     * 把指定的sds串(buf)的长度变为len长度,超出的部分设置为0
+     * 如果len <= len 当前的使用空间,不做任何处理
+     */
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     size_t totlen, curlen = sh->len;
 
     if (len <= curlen) return s;
+    // curlen当前使用的长度
+    // len - curlen = 需要扩大的空间
+    // sdsMakeRoomFor扩大存储空间
     s = sdsMakeRoomFor(s,len-curlen);
     if (s == NULL) return NULL;
 
     /* Make sure added region doesn't contain garbage */
     sh = (void*)(s-(sizeof(struct sdshdr)));
+    // 将多余的空间填充0
     memset(s+curlen,0,(len-curlen+1)); /* also set trailing \0 byte */
     totlen = sh->len+sh->free;
     sh->len = len;
@@ -257,6 +303,9 @@ sds sdsgrowzero(sds s, size_t len) {
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
 sds sdscatlen(sds s, const void *t, size_t len) {
+    /*
+     * 将串t追加到s串中,追加的长度是len
+     */
     struct sdshdr *sh;
     size_t curlen = sdslen(s);
 
@@ -275,6 +324,7 @@ sds sdscatlen(sds s, const void *t, size_t len) {
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
 sds sdscat(sds s, const char *t) {
+    // 追加字符串
     return sdscatlen(s, t, strlen(t));
 }
 
@@ -283,6 +333,9 @@ sds sdscat(sds s, const char *t) {
  * After the call, the modified sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
 sds sdscatsds(sds s, const sds t) {
+    /*
+     * 把sds串t追加到sds串s中去
+     */
     return sdscatlen(s, t, sdslen(t));
 }
 
