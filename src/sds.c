@@ -342,6 +342,9 @@ sds sdscatsds(sds s, const sds t) {
 /* Destructively modify the sds string 's' to hold the specified binary
  * safe string pointed by 't' of length 'len' bytes. */
 sds sdscpylen(sds s, const char *t, size_t len) {
+    /*
+     * 把字符串t,覆盖到s中去,长度为len
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     size_t totlen = sh->free+sh->len;
 
@@ -372,6 +375,9 @@ sds sdscpy(sds s, const char *t) {
  * representation stored at 's'. */
 #define SDS_LLSTR_SIZE 21
 int sdsll2str(char *s, long long value) {
+    /*
+     * 将long long转为字符串
+     */
     char *p, aux;
     unsigned long long v;
     size_t l;
@@ -404,6 +410,9 @@ int sdsll2str(char *s, long long value) {
 
 /* Identical sdsll2str(), but for unsigned long long type. */
 int sdsull2str(char *s, unsigned long long v) {
+    /*
+     * 将unsigned long long 类型的字符串转为字符串
+     */
     char *p, aux;
     size_t l;
 
@@ -436,6 +445,9 @@ int sdsull2str(char *s, unsigned long long v) {
  * sdscatprintf(sdsempty(),"%lld\n", value);
  */
 sds sdsfromlonglong(long long value) {
+    /*
+     * 创建一个long long的sds字符串
+     */
     char buf[SDS_LLSTR_SIZE];
     int len = sdsll2str(buf,value);
 
