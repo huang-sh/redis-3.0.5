@@ -364,6 +364,7 @@ sds sdscpylen(sds s, const char *t, size_t len) {
 /* Like sdscpylen() but 't' must be a null-termined string so that the length
  * of the string is obtained with strlen(). */
 sds sdscpy(sds s, const char *t) {
+    // 对sdscpylen的再一次封装
     return sdscpylen(s, t, strlen(t));
 }
 
@@ -456,13 +457,18 @@ sds sdsfromlonglong(long long value) {
 
 /* Like sdscatprintf() but gets va_list instead of being variadic. */
 sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
+    /*
+     * 把动态参数ap以fmt的格式存储.
+     * 动态的拓展存储空间直到，满足fmt的格式空间
+     */
     va_list cpy;
     char staticbuf[1024], *buf = staticbuf, *t;
     size_t buflen = strlen(fmt)*2;
 
     /* We try to start using a static buffer for speed.
      * If not possible we revert to heap allocation. */
-    if (buflen > sizeof(staticbuf)) {
+    // 尝试以staticbuf或者2倍fmt长度的空间存储
+    if (buflen > sizeof(staticbuf)) {    
         buf = zmalloc(buflen);
         if (buf == NULL) return NULL;
     } else {
@@ -473,10 +479,12 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
      * fit the string in the current buffer size. */
     while(1) {
         buf[buflen-2] = '\0';
-        va_copy(cpy,ap);
+        va_copy(cpy,ap); // 复制 指向可变参数
+        // fmt是模板格式,cpy是可变参数指针,保存在buf中,长度为buflen
+        // 如果生成的长度大于buf,也会覆盖buf的所有长度,len
         vsnprintf(buf, buflen, fmt, cpy);
         va_end(cpy);
-        if (buf[buflen-2] != '\0') {
+        if (buf[buflen-2] != '\0') { // 如果设置'\0'被覆盖掉,则申请更大的空间
             if (buf != staticbuf) zfree(buf);
             buflen *= 2;
             buf = zmalloc(buflen);
@@ -487,7 +495,7 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
     }
 
     /* Finally concat the obtained string to the SDS string and return it. */
-    t = sdscat(s, buf);
+    t = sdscat(s, buf); // 连接到s中
     if (buf != staticbuf) zfree(buf);
     return t;
 }
@@ -551,7 +559,7 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
 
         /* Make sure there is always space for at least 1 char. */
         if (sh->free == 0) {
-            s = sdsMakeRoomFor(s,1);
+            s = sdsMakeRoomFor(s,1); // return null ?
             sh = (void*) (s-(sizeof(struct sdshdr)));
         }
 
@@ -648,6 +656,10 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
  * Output will be just "Hello World".
  */
 sds sdstrim(sds s, const char *cset) {
+    /*
+     * 这个函数是从s串中移除包含cset串中的任意字符
+     * 从左往右,在从右往左
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     char *start, *end, *sp, *ep;
     size_t len;
