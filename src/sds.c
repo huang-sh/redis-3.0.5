@@ -542,6 +542,9 @@ sds sdscatprintf(sds s, const char *fmt, ...) {
  * %% - Verbatim "%" character.
  */
 sds sdscatfmt(sds s, char const *fmt, ...) {
+    /*
+     * 根据模板fmt以及动态字符串参数->生成字符串.拼接到sds字符串中
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     size_t initlen = sdslen(s);
     const char *f = fmt;
@@ -666,7 +669,9 @@ sds sdstrim(sds s, const char *cset) {
 
     sp = start = s;
     ep = end = s+sdslen(s)-1;
+    // 从左往右查找
     while(sp <= end && strchr(cset, *sp)) sp++;
+    // 从右往左查找
     while(ep > start && strchr(cset, *ep)) ep--;
     len = (sp > ep) ? 0 : ((ep-sp)+1);
     if (sh->buf != sp) memmove(sh->buf, sp, len);
@@ -693,6 +698,10 @@ sds sdstrim(sds s, const char *cset) {
  * sdsrange(s,1,-1); => "ello World"
  */
 void sdsrange(sds s, int start, int end) {
+    /*
+     * 保留start-end的数据空间
+     * start和end负数时表示从右往左算
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     size_t newlen, len = sdslen(s);
 
@@ -724,6 +733,9 @@ void sdsrange(sds s, int start, int end) {
 
 /* Apply tolower() to every character of the sds string 's'. */
 void sdstolower(sds s) {
+    /*
+     * 将字符串转为小写
+     */
     int len = sdslen(s), j;
 
     for (j = 0; j < len; j++) s[j] = tolower(s[j]);
@@ -731,6 +743,9 @@ void sdstolower(sds s) {
 
 /* Apply toupper() to every character of the sds string 's'. */
 void sdstoupper(sds s) {
+    /*
+     * 将字符串转为大写
+     */
     int len = sdslen(s), j;
 
     for (j = 0; j < len; j++) s[j] = toupper(s[j]);
@@ -748,6 +763,10 @@ void sdstoupper(sds s) {
  * additional characters, the longer string is considered to be greater than
  * the smaller one. */
 int sdscmp(const sds s1, const sds s2) {
+    /*
+     * 比较字符串s1和s2,是二进制安全的比较
+     * 如果s1和s2的前缀相同,长得字符串大于小的字符串
+     */
     size_t l1, l2, minlen;
     int cmp;
 
