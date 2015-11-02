@@ -1,2 +1,6 @@
-编译sds
+基本文档.huangshihuai@baidu.com
+Time: 2015-11-02 17:23
+编译sds.test的命令如下:
 cc -std=c99 -pedantic -O2 -fPIC  -Wall -W -Wstrict-prototypes -Wwrite-strings -g -ggdb sds.c sds.h test.c -o a.out
+
+
