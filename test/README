@@ -1,0 +1,2 @@
+编译sds
+cc -std=c99 -pedantic -O2 -fPIC  -Wall -W -Wstrict-prototypes -Wwrite-strings -g -ggdb sds.c sds.h test.c -o a.out

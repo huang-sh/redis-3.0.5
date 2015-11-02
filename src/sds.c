@@ -459,7 +459,7 @@ sds sdsfromlonglong(long long value) {
 sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
     /*
      * 把动态参数ap以fmt的格式存储.
-     * 动态的拓展存储空间直到，满足fmt的格式空间
+     * sds会自动拓展存储空间,直到满足fmt的格式空间
      */
     va_list cpy;
     char staticbuf[1024], *buf = staticbuf, *t;
@@ -505,6 +505,7 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
  *
  * After the call, the modified sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call.
+ * 引用将重新被改变,
  *
  * Example:
  *
@@ -517,6 +518,9 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
  * s = sdscatprintf(sdsempty(), "... your format ...", args);
  */
 sds sdscatprintf(sds s, const char *fmt, ...) {
+    /*
+     * 生成新的sds字符串,按照模板fmt以及可变参数
+     */
     va_list ap;
     char *t;
     va_start(ap, fmt);
@@ -543,7 +547,7 @@ sds sdscatprintf(sds s, const char *fmt, ...) {
  */
 sds sdscatfmt(sds s, char const *fmt, ...) {
     /*
-     * 根据模板fmt以及动态字符串参数->生成字符串.拼接到sds字符串中
+     * 根据模板fmt以及动态参数->生成字符串.拼接到sds字符串中
      */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     size_t initlen = sdslen(s);
@@ -821,7 +825,7 @@ sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count
     // len-(seplen - 1): 保证匹配到s串的倒数第 seplen-1 个
     for (j = 0; j < (len-(seplen-1)); j++) {
         /* make sure there is room for the next element and the final one */
-        if (slots < elements+2) {
+        if (slots < elements+2) {   // elements为slots-1时,从新开辟空间
             sds *newtokens;
 
             slots *= 2;
@@ -831,12 +835,15 @@ sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count
         }
         /* search the separator */
         // 如果s串的长度seplen为1,只需要比较一个字符
-        // 否则需要比较s串的,内存比较
+        // 否则需要比较s串的,内存比较,二进制安全
         if ((seplen == 1 && *(s+j) == sep[0]) || (memcmp(s+j,sep,seplen) == 0)) {
+            // new sds字符串
             tokens[elements] = sdsnewlen(s+start,j-start);
+            // 清除内存
             if (tokens[elements] == NULL) goto cleanup;
             elements++;
             start = j+seplen;
+            // 跳过的操作符
             j = j+seplen-1; /* skip the separator */
         }
     }
@@ -850,6 +857,7 @@ sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count
 cleanup:
     {
         int i;
+        // 清除开辟的空间
         for (i = 0; i < elements; i++) sdsfree(tokens[i]);
         zfree(tokens);
         *count = 0;
@@ -858,6 +866,10 @@ cleanup:
 }
 
 /* Free the result returned by sdssplitlen(), or do nothing if 'tokens' is NULL. */
+/*
+ * 释放由 "sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count)"函数返回的结果
+ * 也可以什么都不做,应为tokens为NULL
+ */
 void sdsfreesplitres(sds *tokens, int count) {
     if (!tokens) return;
     while(count--)
@@ -868,25 +880,36 @@ void sdsfreesplitres(sds *tokens, int count) {
 /* Append to the sds string "s" an escaped string representation where
  * all the non-printable characters (tested with isprint()) are turned into
  * escapes in the form "\n\r\a...." or "\x<hex-number>".
+ * 所有非打印字符都会被转换,例如:{\t=>\\t,\n=>\\n},存储到s串中
+ * printable可打印字符串(0x20-0x7e)之间的数字,
+ * 这些字符可以显示到屏幕上,让我们看到: 不能显示在屏幕上,我们看不到的,叫控制字符
  *
  * After the call, the modified sds string is no longer valid and all the
- * references must be substituted with the new pointer returned by the call. */
+ * references must be substituted with the new pointer returned by the call. 
+ * 修改后的字符串将不再是有效的,所有的引用不许修改为新的指针
+ * */
 sds sdscatrepr(sds s, const char *p, size_t len) {
-    s = sdscatlen(s,"\"",1);
+    /*
+     * 将字符串p拼接到s中,拼接的长度是len.
+     * 如果是默认的非打印字符串,则则采用转换形式
+     * 如果不是默认的非打印字符串,则使用isprint()判断
+     */
+    s = sdscatlen(s,"\"",1); // 吧字符串追加到s中,长度为1
     while(len--) {
         switch(*p) {
+            // 默认的非打印字符串
         case '\\':
         case '"':
-            s = sdscatprintf(s,"\\%c",*p);
+            s = sdscatprintf(s,"\\%c",*p); // 按照模板以及参数,拼接到s字符串中去
             break;
-        case '\n': s = sdscatlen(s,"\\n",2); break;
+        case '\n': s = sdscatlen(s,"\\n",2); break; // 追加到字符串s中去,长度为2
         case '\r': s = sdscatlen(s,"\\r",2); break;
         case '\t': s = sdscatlen(s,"\\t",2); break;
         case '\a': s = sdscatlen(s,"\\a",2); break;
         case '\b': s = sdscatlen(s,"\\b",2); break;
         default:
-            if (isprint(*p))
-                s = sdscatprintf(s,"%c",*p);
+            if (isprint(*p))    // 测试是否为打印字符串
+                s = sdscatprintf(s,"%c",*p);    // 按照模板以及参数,拼接到s字符串中去
             else
                 s = sdscatprintf(s,"\\x%02x",(unsigned char)*p);
             break;
@@ -897,14 +920,18 @@ sds sdscatrepr(sds s, const char *p, size_t len) {
 }
 
 /* Helper function for sdssplitargs() that returns non zero if 'c'
- * is a valid hex digit. */
+ * is a valid hex digit. 
+ * 返回一个16进制数0-9{{a-f} | {A-F}}
+ * */
 int is_hex_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
            (c >= 'A' && c <= 'F');
 }
 
 /* Helper function for sdssplitargs() that converts a hex digit into an
- * integer from 0 to 15 */
+ * integer from 0 to 15 
+ * 将16进制数转为10进制,0-15
+ * */
 int hex_digit_to_int(char c) {
     switch(c) {
     case '0': return 0;
@@ -930,21 +957,38 @@ int hex_digit_to_int(char c) {
 /* Split a line into arguments, where every argument can be in the
  * following programming-language REPL-alike form:
  *
+ * 将一行文本分割成多个参数，每个参数可以有以下的类编程语言 REPL 格式:
  * foo bar "newline are supported\n" and "\xff\x00otherstuff"
  *
+ * 参数的个数会保存在 *argc 中,函数返回一个 sds 数组.
  * The number of arguments is stored into *argc, and an array
  * of sds is returned.
  *
+ * 调用者应该使用 sdsfreesplitres() 来释放函数返回的 sds 数组.
  * The caller should free the resulting array of sds strings with
  * sdsfreesplitres().
  *
+ * sdscatrepr() 可以将一个字符串转换为一个带引号（quoted）的字符串,
+ * 这个带引号的字符串可以被 sdssplitargs() 分析
  * Note that sdscatrepr() is able to convert back a string into
  * a quoted string in the same format sdssplitargs() is able to parse.
  *
+ * 即使输入出现空字符串,NULL 或者输入带有未对应的括号.
+ * 函数都会将已成功处理的字符串先返回.
  * The function returns the allocated tokens on success, even when the
  * input string is empty, or NULL if the input contains unbalanced
  * quotes or closed quotes followed by non space characters
  * as in: "foo"bar or "foo'
+ *
+ * 这个函数主要用于 config.c 中对配置文件进行分析
+ * 例子:
+ * sds *arr = sdssplitargs("timeout 10086\r\nport 123321\r\n");
+ * 会得出:
+ * arr[0] = "timeout"
+ * arr[1] = "10086"
+ * arr[2] = "port"
+ * arr[3] = "123321"
+ * T=O(N^2)
  */
 sds *sdssplitargs(const char *line, int *argc) {
     const char *p = line;
@@ -954,11 +998,12 @@ sds *sdssplitargs(const char *line, int *argc) {
     *argc = 0;
     while(1) {
         /* skip blanks */
+        // 跳过空白
         while(*p && isspace(*p)) p++;
         if (*p) {
             /* get a token */
-            int inq=0;  /* set to 1 if we are in "quotes" */
-            int insq=0; /* set to 1 if we are in 'single quotes' */
+            int inq=0;  /* set to 1 if we are in "quotes" 双引号*/
+            int insq=0; /* set to 1 if we are in 'single quotes' 单引号*/
             int done=0;
 
             if (current == NULL) current = sdsempty();
@@ -1066,6 +1111,10 @@ err:
  * The function returns the sds string pointer, that is always the same
  * as the input pointer since no resize is needed. */
 sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
+    /*
+     * sdsmapchars:sds的字符映射,是把s中出现的from字符替换成to所对应的字符
+     * from和to字符必须对应,map
+     */
     size_t j, i, l = sdslen(s);
 
     for (j = 0; j < l; j++) {
@@ -1080,7 +1129,13 @@ sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
 }
 
 /* Join an array of C strings using the specified separator (also a C string).
- * Returns the result as an sds string. */
+ * Returns the result as an sds string. 
+ * 将数组argv按顺序拼接到sds字符串中,并且在下一个字符串前加入sep分割符
+ * 例如:
+ * argv={"123", "456", "789"}, argc = 3, sep="$$"
+ * sds str = sdsjoin(argv, argc, sep);
+ * 输出: 123$$456$$789
+ * */
 sds sdsjoin(char **argv, int argc, char *sep) {
     sds join = sdsempty();
     int j;
