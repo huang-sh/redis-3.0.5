@@ -121,7 +121,11 @@ void sdsfree(sds s) {
  * remains 6 bytes. 
  * */
 void sdsupdatelen(sds s) {
-    // 还是有些不理解
+    /* 这个主要是防止非法修改sds字符串 
+     * 对于用户来说只看得到sds,
+     * 但是redis封装了sdshdr它真实记录了sds的真实的使用长度
+     * 如果不使用sdsupdatelen更新sds长度,将会浪费内存
+     */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     int reallen = strlen(s); //
     sh->free += (sh->len-reallen);  // 
@@ -253,7 +257,7 @@ void sdsIncrLen(sds s, int incr) {
     /*
      * 这个是在原来sds的基础上修改free以及len的属性
      * 当incr > 0,是要增加使用空间, 必须保证 sh->free >= incr;自由空间大于增量大小
-     * 否则,是要缩小使用空间,必须保证 sh->len >= incr;使用空间大于缩量大小
+     * 当incr < 0,是要缩小使用空间,必须保证 sh->len >= incr;使用空间大于缩量大小
      */
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
 

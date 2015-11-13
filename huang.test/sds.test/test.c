@@ -37,56 +37,11 @@ int main(void)
     sds str = sdsjoin(argv, argc, sep);
     printf("\n%s\n", str);
     sdsfree(str);
+    printf("测试sdsupdatelen:\n");
+    sds test = sdsnew("foobar");
+    test[2] = '\0';
+    printf("%d\n", sdslen(test));
+    sdsupdatelen(test);
+    printf("%d\n", sdslen(test));
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
