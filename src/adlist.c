@@ -40,7 +40,7 @@
  * On error, NULL is returned. Otherwise the pointer to the new list. */
 list *listCreate(void)
 {
-    /* 创建一个新的list */
+    /* 创建一个新的list. 这个没什么好解释的 */
     struct list *list;
 
     if ((list = zmalloc(sizeof(*list))) == NULL)
@@ -183,14 +183,15 @@ list *listInsertNode(list *list, listNode *old_node, void *value, int after) {
  * This function can't fail. */
 void listDelNode(list *list, listNode *node)
 {
-    if (node->prev)
+    if (node->prev) // 是否存在上一个节点
         node->prev->next = node->next;
-    else
+    else    // node是head
         list->head = node->next;
-    if (node->next)
+    if (node->next) // 是否存在下一个节点
         node->next->prev = node->prev;
-    else
+    else    // node是尾
         list->tail = node->prev;
+    // 回收数据空间
     if (list->free) list->free(node->value);
     zfree(node);
     list->len--;
@@ -202,31 +203,37 @@ void listDelNode(list *list, listNode *node)
  * This function can't fail. */
 listIter *listGetIterator(list *list, int direction)
 {
+    /* 返回一个迭代子 
+     * 查看adlist.h中typedef struct listIter  */
     listIter *iter;
 
     if ((iter = zmalloc(sizeof(*iter))) == NULL) return NULL;
+    // 迭代器的方向配置查看adlist.h文件
     if (direction == AL_START_HEAD)
-        iter->next = list->head;
+        iter->next = list->head;    // 从未部往头部搜索
     else
-        iter->next = list->tail;
-    iter->direction = direction;
+        iter->next = list->tail;    // 从头部往尾部搜索
+    iter->direction = direction;    // 保存方向标识
     return iter;
 }
 
 /* Release the iterator memory */
 void listReleaseIterator(listIter *iter) {
+    // 回收迭代器的内存
     zfree(iter);
 }
 
 /* Create an iterator in the list private iterator structure */
 void listRewind(list *list, listIter *li) {
+    // 创建一个私有迭代器
     li->next = list->head;
-    li->direction = AL_START_HEAD;
+    li->direction = AL_START_HEAD;// 从头开始搜素
 }
 
 void listRewindTail(list *list, listIter *li) {
+    // 创建一个私有迭代器
     li->next = list->tail;
-    li->direction = AL_START_TAIL;
+    li->direction = AL_START_TAIL;// 从尾部开始搜索
 }
 
 /* Return the next element of an iterator.
@@ -245,6 +252,8 @@ void listRewindTail(list *list, listIter *li) {
  * */
 listNode *listNext(listIter *iter)
 {
+    // 通过迭代器获取当前迭代器所存储的元素
+    // 如果当前的元素不为空,使迭代器向下移动一个单位
     listNode *current = iter->next;
 
     if (current != NULL) {
@@ -272,22 +281,25 @@ list *listDup(list *orig)
 
     if ((copy = listCreate()) == NULL)
         return NULL;
-    copy->dup = orig->dup;
+    copy->dup = orig->dup; // 拷贝value的函数
     copy->free = orig->free;
     copy->match = orig->match;
+    // 获取迭代器,从头开始搜索
     iter = listGetIterator(orig, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
         void *value;
 
-        if (copy->dup) {
+        if (copy->dup) { // 有设置dup函数
+            // 拷贝失败
             value = copy->dup(node->value);
             if (value == NULL) {
-                listRelease(copy);
-                listReleaseIterator(iter);
+                listRelease(copy); // 回收list
+                listReleaseIterator(iter); // 回收迭代器
                 return NULL;
             }
         } else
             value = node->value;
+        // 在尾部增加节点
         if (listAddNodeTail(copy, value) == NULL) {
             listRelease(copy);
             listReleaseIterator(iter);
@@ -309,6 +321,10 @@ list *listDup(list *orig)
  * NULL is returned. */
 listNode *listSearchKey(list *list, void *key)
 {
+    /* 这是查找node,和value作比较. 
+     * 如果没有设置比较函数(match),
+     * 则key将会和所有的node中的value直接比较('==')*/
+    /* 返回的node没有深拷贝*/
     listIter *iter;
     listNode *node;
 
@@ -336,6 +352,10 @@ listNode *listSearchKey(list *list, void *key)
  * from the tail, -1 is the last element, -2 the penultimate
  * and so on. If the index is out of range NULL is returned. */
 listNode *listIndex(list *list, long index) {
+    /* 根据index查找node
+     * 如果index>=0则从头开始搜索
+     * 如果index<=-1则从尾开始搜索
+     * index为步长,超出返回NULL*/
     listNode *n;
 
     if (index < 0) {
@@ -351,12 +371,15 @@ listNode *listIndex(list *list, long index) {
 
 /* Rotate the list removing the tail node and inserting it to the head. */
 void listRotate(list *list) {
+    /* 将尾指针移动到头部 */
     listNode *tail = list->tail;
 
+    // 获取listNode的长度
     if (listLength(list) <= 1) return;
 
     /* Detach current tail */
-    list->tail = tail->prev;
+    // 分离当前tail,
+    list->tail = tail->prev;//修改list中的尾指针,使其指向倒数第二个
     list->tail->next = NULL;
     /* Move it as head */
     list->head->prev = tail;

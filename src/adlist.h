@@ -41,16 +41,17 @@ typedef struct listNode {
 
 /* 迭代器 */
 typedef struct listIter {
-    listNode *next; //
+    listNode *next; // 当前迭代子保存的节点位置
     int direction; // 迭代器的方向 查看定义
 } listIter;
 
 typedef struct list {
     listNode *head;     // 头节点
     listNode *tail;     // 尾节点
-    void *(*dup)(void *ptr);    // 函数指针,void*类型的参数,返回void*的指针
-    void (*free)(void *ptr);    // 回收listNode的Value
-    int (*match)(void *ptr, void *key); //
+    // 函数指针,void*类型的参数,返回void*的指针
+    void *(*dup)(void *ptr);//和拷贝函数(listDup())互相配合的用户自定义函数,主要是拷贝value
+    void (*free)(void *ptr);// 回收listNode的Value
+    int (*match)(void *ptr, void *key); //是比对value是否相等,的函数
     unsigned long len;      // 长度,双端链表的长度
 } list;
 
@@ -88,23 +89,27 @@ list *listInsertNode(list *list, listNode *old_node, void *value, int after);
 void listDelNode(list *list, listNode *node);
 // 获取 迭代器
 listIter *listGetIterator(list *list, int direction);
-// 下一个 迭代器
+// 获取迭代器当前所指向的指针,
+// 并且是迭代器移动到下一个位置
+// 移动的方向由direction决定
 listNode *listNext(listIter *iter);
 // 回收 迭代器
 void listReleaseIterator(listIter *iter);
-// 
+// 复制整个list
 list *listDup(list *orig);
 // 查找Key
 listNode *listSearchKey(list *list, void *key);
 // 访问第index位置的listNode
 listNode *listIndex(list *list, long index);
+// 创建一个私有的迭代器,从头部开始搜索
 void listRewind(list *list, listIter *li);
+// 创建一个私有的迭代器,从尾部开始搜索
 void listRewindTail(list *list, listIter *li);
-// list 旋转
+// 将list中的尾指针(tail)移动到头部(head)
 void listRotate(list *list);
 
 /* Directions for iterators */
-#define AL_START_HEAD 0
-#define AL_START_TAIL 1
+#define AL_START_HEAD 0 // 从未部往头部搜索
+#define AL_START_TAIL 1 // 从头部往尾部搜索
 
 #endif /* __ADLIST_H__ */
