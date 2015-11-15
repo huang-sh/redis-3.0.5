@@ -90,7 +90,7 @@ void listDelNode(list *list, listNode *node);
 // 获取 迭代器
 listIter *listGetIterator(list *list, int direction);
 // 获取迭代器当前所指向的指针,
-// 并且是迭代器移动到下一个位置
+// 并且使迭代器移动到下一个位置
 // 移动的方向由direction决定
 listNode *listNext(listIter *iter);
 // 回收 迭代器
@@ -109,7 +109,7 @@ void listRewindTail(list *list, listIter *li);
 void listRotate(list *list);
 
 /* Directions for iterators */
-#define AL_START_HEAD 0 // 从未部往头部搜索
+#define AL_START_HEAD 0 // 从尾部往头部搜索
 #define AL_START_TAIL 1 // 从头部往尾部搜索
 
 #endif /* __ADLIST_H__ */
