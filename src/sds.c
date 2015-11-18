@@ -85,6 +85,7 @@ sds sdsnew(const char *init) {
 /* Duplicate an sds string. */
 sds sdsdup(const sds s) {
     // copy new sds
+    // 拷贝一份新额sds
     return sdsnewlen(s, sdslen(s));
 }
 

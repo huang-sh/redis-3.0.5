@@ -41,6 +41,8 @@ typedef char *sds;
 struct sdshdr {
     unsigned int len;   // 使用的长度
     unsigned int free;  // 开辟的空间
+    // 利用c99(C99 specification 6.7.2.1.16)中引入的
+    // flexible array member,通过buf来引用sdshdr后面的地址，
     char buf[];         // 存储
 };
 
@@ -67,7 +69,9 @@ sds sdsnew(const char *init);
 sds sdsempty(void);
 // 获取sds的使用空间
 size_t sdslen(const sds s);
+// 拷贝一份新额sds
 sds sdsdup(const sds s);
+// 回收空间
 void sdsfree(sds s);
 size_t sdsavail(const sds s);
 sds sdsgrowzero(sds s, size_t len);
@@ -79,6 +83,7 @@ sds sdscpy(sds s, const char *t);
 
 sds sdscatvprintf(sds s, const char *fmt, va_list ap);
 #ifdef __GNUC__
+// fmt是类是于print的,可变变量从3开始
 sds sdscatprintf(sds s, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
 #else
@@ -88,7 +93,9 @@ sds sdscatprintf(sds s, const char *fmt, ...);
 sds sdscatfmt(sds s, char const *fmt, ...);
 sds sdstrim(sds s, const char *cset);
 void sdsrange(sds s, int start, int end);
+// 更新sds的使用长度
 void sdsupdatelen(sds s);
+// 清空sds字符串,但不回收空间
 void sdsclear(sds s);
 int sdscmp(const sds s1, const sds s2);
 sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count);
@@ -102,9 +109,12 @@ sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen);
 sds sdsjoin(char **argv, int argc, char *sep);
 
 /* Low level functions exposed to the user API */
+// 扩大sds的存储空间,只有保证free小于 addlen才会扩大
 sds sdsMakeRoomFor(sds s, size_t addlen);
 void sdsIncrLen(sds s, int incr);
+// 缩小sds中buf的空间,仅仅缩小到len,free为0
 sds sdsRemoveFreeSpace(sds s);
+// 返回sds所在的struct sdshdr的空间大小,包括buf`
 size_t sdsAllocSize(sds s);
 
 #endif
