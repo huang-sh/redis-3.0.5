@@ -111,6 +111,8 @@ sds sdsjoin(char **argv, int argc, char *sep);
 /* Low level functions exposed to the user API */
 // 扩大sds的存储空间,只有保证free小于 addlen才会扩大
 sds sdsMakeRoomFor(sds s, size_t addlen);
+// 这个是在原来sds的基础上修改free以及len的属性
+// 缩小空间时保证free >= incr 扩大空间时保证len >= incr
 void sdsIncrLen(sds s, int incr);
 // 缩小sds中buf的空间,仅仅缩小到len,free为0
 sds sdsRemoveFreeSpace(sds s);
