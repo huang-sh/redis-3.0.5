@@ -44,6 +44,7 @@
 /* Unused arguments generate annoying warnings... */
 #define DICT_NOTUSED(V) ((void) V)
 
+// 字典的实体
 typedef struct dictEntry {
     void *key;
     union {
@@ -76,16 +77,21 @@ typedef struct dictType {
 // hashTable
 typedef struct dictht {
     dictEntry **table;
-    unsigned long size;
-    unsigned long sizemask;
-    unsigned long used;
+    unsigned long size; // 大小
+    unsigned long sizemask; // 最大值
+    unsigned long used; // 使用
 } dictht;
 
 typedef struct dict {
-    dictType *type; // 相关函数定义
+    // 相关函数定义
+    dictType *type;
+    // 似有数据(类型自定义)
     void *privdata;
-    dictht ht[2];   // hashTable
+    // hashTable
+    dictht ht[2];
+    // 如果rehashidx==-1,没有在运行
     long rehashidx; /* rehashing not in progress if rehashidx == -1 */
+    // 当前正在运行的迭代器
     int iterators; /* number of iterators currently running */
 } dict;
 
